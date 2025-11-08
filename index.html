@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodePen Clone</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+        }
+        
+        .pen-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #1e1e1e;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .pen-header {
+            background: #2c2c2c;
+            padding: 15px 20px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .pen-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .pen-title h1 {
+            font-size: 18px;
+            font-weight: normal;
+            color: #ccc;
+        }
+        
+        .pen-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            background: #444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .action-btn:hover {
+            background: #555;
+        }
+        
+        .editor-tabs {
+            display: flex;
+            background: #2c2c2c;
+            border-bottom: 1px solid #444;
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: #ccc;
+            font-size: 14px;
+        }
+        
+        .tab.active {
+            color: white;
+            border-bottom: 2px solid #0ebeff;
+        }
+        
+        .editor-container {
+            display: flex;
+            height: 400px;
+        }
+        
+        .code-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #444;
+        }
+        
+        .editor-header {
+            background: #2c2c2c;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #444;
+        }
+        
+        .editor-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        .editor-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .editor-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .line-numbers {
+            background: #1e1e1e;
+            color: #6e7681;
+            padding: 15px 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            text-align: right;
+            border-right: 1px solid #444;
+            overflow: hidden;
+            min-width: 40px;
+            user-select: none;
+        }
+        
+        .code-area {
+            flex: 1;
+            position: relative;
+            overflow: auto;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 100%;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border: none;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        
+        .preview-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .preview-header {
+            background: #2c2c2c;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #444;
+        }
+        
+        .preview-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        .preview-content {
+            flex: 1;
+            background: white;
+            color: black;
+            overflow: auto;
+            padding: 20px;
+        }
+        
+        .result-only .editor-container {
+            display: none;
+        }
+        
+        .result-only .preview-container {
+            height: 500px;
+        }
+        
+        .suggestions-box {
+            position: absolute;
+            background: #2c2c2c;
+            border: 1px solid #444;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: none;
+            width: 200px;
+        }
+        
+        .suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #444;
+            color: #d4d4d4;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        .suggestion-item:hover, .suggestion-item.active {
+            background: #0ebeff;
+            color: white;
+        }
+        
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        
+        .icon {
+            width: 16px;
+            height: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="pen-container">
+        <div class="pen-header">
+            <div class="pen-title">
+                <h1>Untitled</h1>
+            </div>
+            <div class="pen-actions">
+                <button class="action-btn">Add to Collection</button>
+                <button class="action-btn">Fork</button>
+                <button class="action-btn">Export</button>
+                <button class="action-btn">Share</button>
+            </div>
+        </div>
+        
+        <div class="editor-tabs">
+            <div class="tab active" data-tab="html">HTML</div>
+            <div class="tab" data-tab="css">CSS</div>
+            <div class="tab" data-tab="js">JS</div>
+            <div class="tab" data-tab="result">Result</div>
+        </div>
+        
+        <div class="editor-container">
+            <div class="code-editor">
+                <div class="editor-header">
+                    <div class="editor-title">
+                        <span>HTML</span>
+                    </div>
+                </div>
+                <div class="editor-content">
+                    <div class="editor-wrapper">
+                        <div class="line-numbers" id="html-line-numbers">
+                            <div class="line-number">1</div>
+                            <div class="line-number">2</div>
+                            <div class="line-number">3</div>
+                            <div class="line-number">4</div>
+                            <div class="line-number">5</div>
+                            <div class="line-number">6</div>
+                            <div class="line-number">7</div>
+                            <div class="line-number">8</div>
+                            <div class="line-number">9</div>
+                            <div class="line-number">10</div>
+                            <div class="line-number">11</div>
+                            <div class="line-number">12</div>
+                            <div class="line-number">13</div>
+                        </div>
+                        <div class="code-area">
+                            <textarea id="html-editor" placeholder="আপনার HTML কোড লিখুন...">&lt;!DOCTYPE html&gt;
+&lt;html lang="bn"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;আমার ওয়েবসাইট&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="container"&gt;
+        &lt;h1&gt;স্বাগতম!&lt;/h1&gt;
+        &lt;p&gt;এটি একটি উদাহরণ প্যারাগ্রাফ।&lt;/p&gt;
+        &lt;button onclick="showAlert()"&gt;ক্লিক করুন&lt;/button&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</textarea>
+                        </div>
+                    </div>
+                    <div class="suggestions-box" id="html-suggestions"></div>
+                </div>
+            </div>
+            
+            <div class="code-editor">
+                <div class="editor-header">
+                    <div class="editor-title">
+                        <span>CSS</span>
+                    </div>
+                </div>
+                <div class="editor-content">
+                    <div class="editor-wrapper">
+                        <div class="line-numbers" id="css-line-numbers">
+                            <div class="line-number">1</div>
+                            <div class="line-number">2</div>
+                            <div class="line-number">3</div>
+                            <div class="line-number">4</div>
+                            <div class="line-number">5</div>
+                            <div class="line-number">6</div>
+                            <div class="line-number">7</div>
+                            <div class="line-number">8</div>
+                            <div class="line-number">9</div>
+                            <div class="line-number">10</div>
+                            <div class="line-number">11</div>
+                            <div class="line-number">12</div>
+                            <div class="line-number">13</div>
+                            <div class="line-number">14</div>
+                            <div class="line-number">15</div>
+                            <div class="line-number">16</div>
+                            <div class="line-number">17</div>
+                            <div class="line-number">18</div>
+                            <div class="line-number">19</div>
+                            <div class="line-number">20</div>
+                        </div>
+                        <div class="code-area">
+                            <textarea id="css-editor" placeholder="আপনার CSS কোড লিখুন...">.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+    font-family: Arial, sans-serif;
+}
+
+h1 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+p {
+    color: #34495e;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+button {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background: #2980b9;
+}</textarea>
+                        </div>
+                    </div>
+                    <div class="suggestions-box" id="css-suggestions"></div>
+                </div>
+            </div>
+            
+            <div class="code-editor">
+                <div class="editor-header">
+                    <div class="editor-title">
+                        <span>JS</span>
+                    </div>
+                </div>
+                <div class="editor-content">
+                    <div class="editor-wrapper">
+                        <div class="line-numbers" id="js-line-numbers">
+                            <div class="line-number">1</div>
+                            <div class="line-number">2</div>
+                            <div class="line-number">3</div>
+                            <div class="line-number">4</div>
+                            <div class="line-number">5</div>
+                            <div class="line-number">6</div>
+                            <div class="line-number">7</div>
+                            <div class="line-number">8</div>
+                            <div class="line-number">9</div>
+                            <div class="line-number">10</div>
+                        </div>
+                        <div class="code-area">
+                            <textarea id="js-editor" placeholder="আপনার JavaScript কোড লিখুন...">function showAlert() {
+    alert('হ্যালো! জাভাস্ক্রিপ্ট কাজ করছে!');
+}
+
+// কনসোলে মেসেজ
+console.log('পেজ লোড হয়েছে!');
+
+// DOM লোড হওয়ার পর
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM সম্পূর্ণ লোড হয়েছে!');
+});</textarea>
+                        </div>
+                    </div>
+                    <div class="suggestions-box" id="js-suggestions"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="preview-container">
+            <div class="preview-header">
+                <div class="preview-title">
+                    <span>Result</span>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="action-btn" id="refresh-btn">Refresh</button>
+                </div>
+            </div>
+            <div class="preview-content" id="preview">
+                <!-- প্রিভিউ এখানে শো হবে -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM কন্টেন্ট লোড হওয়ার পরে কোড এক্সিকিউট করুন
+        document.addEventListener('DOMContentLoaded', function() {
+            // এলিমেন্ট রেফারেন্স
+            const htmlEditor = document.getElementById('html-editor');
+            const cssEditor = document.getElementById('css-editor');
+            const jsEditor = document.getElementById('js-editor');
+            const preview = document.getElementById('preview');
+            const refreshBtn = document.getElementById('refresh-btn');
+            const tabs = document.querySelectorAll('.tab');
+            const penContainer = document.querySelector('.pen-container');
+            
+            const htmlLineNumbers = document.getElementById('html-line-numbers');
+            const cssLineNumbers = document.getElementById('css-line-numbers');
+            const jsLineNumbers = document.getElementById('js-line-numbers');
+
+            // অটো-কমপ্লিশন ডেটা
+            const htmlAutoComplete = {
+                'b': [
+                    { display: 'body', value: 'body' },
+                    { display: 'bold', value: 'bold' },
+                    { display: 'box-sizing', value: 'box-sizing' },
+                    { display: 'border-box', value: 'border-box' },
+                    { display: 'background-color', value: 'background-color' },
+                    { display: 'background', value: 'background' },
+                    { display: 'box-shadow', value: 'box-shadow' }
+                ],
+                'h': [
+                    { display: 'head', value: 'head' },
+                    { display: 'html', value: 'html' },
+                    { display: 'header', value: 'header' },
+                    { display: 'hover', value: 'hover' },
+                    { display: 'h2', value: 'h2' },
+                    { display: 'hero', value: 'hero' },
+                    { display: 'h1', value: 'h1' },
+                    { display: 'href', value: 'href' }
+                ],
+                'd': [
+                    { display: 'div', value: 'div' },
+                    { display: 'DOCTYPE', value: 'DOCTYPE' }
+                ],
+                'p': [
+                    { display: 'p', value: 'p' },
+                    { display: 'padding', value: 'padding' }
+                ]
+            };
+
+            const cssAutoComplete = {
+                'b': [
+                    { display: 'background', value: 'background: ' },
+                    { display: 'border', value: 'border: ' },
+                    { display: 'body', value: 'body' }
+                ],
+                'm': [
+                    { display: 'margin', value: 'margin: ' },
+                    { display: 'max-width', value: 'max-width: ' }
+                ],
+                'p': [
+                    { display: 'padding', value: 'padding: ' },
+                    { display: 'position', value: 'position: ' }
+                ],
+                'c': [
+                    { display: 'color', value: 'color: ' },
+                    { display: 'container', value: 'container' }
+                ]
+            };
+
+            const jsAutoComplete = {
+                'f': [
+                    { display: 'function', value: 'function ' },
+                    { display: 'for', value: 'for' }
+                ],
+                'c': [
+                    { display: 'console.log', value: 'console.log()' },
+                    { display: 'const', value: 'const ' }
+                ],
+                'd': [
+                    { display: 'document', value: 'document' },
+                    { display: 'DOMContentLoaded', value: 'DOMContentLoaded' }
+                ]
+            };
+            
+            // লাইন নাম্বার আপডেট ফাংশন
+            function updateLineNumbers(editor, lineNumbersElement) {
+                const lines = editor.value.split('\n');
+                let numbersHTML = '';
+                
+                for (let i = 1; i <= Math.max(lines.length, 20); i++) {
+                    numbersHTML += `<div class="line-number">${i}</div>`;
+                }
+                
+                lineNumbersElement.innerHTML = numbersHTML;
+                
+                // স্ক্রোল সিঙ্ক্রোনাইজ করুন
+                lineNumbersElement.scrollTop = editor.scrollTop;
+            }
+            
+            // প্রিভিউ আপডেট ফাংশন
+            function updatePreview() {
+                const html = htmlEditor.value;
+                const css = cssEditor.value;
+                const js = jsEditor.value;
+                
+                preview.innerHTML = html;
+                
+                // CSS প্রয়োগ করুন
+                const style = document.createElement('style');
+                style.textContent = css;
+                preview.appendChild(style);
+                
+                // JavaScript প্রয়োগ করুন
+                try {
+                    const script = document.createElement('script');
+                    script.textContent = js;
+                    preview.appendChild(script);
+                } catch (error) {
+                    console.error('JavaScript ত্রুটি:', error);
+                }
+            }
+            
+            // অটো-কমপ্লিশন সেটআপ
+            function setupAutoComplete(editor, suggestionsElement, autoCompleteData) {
+                let currentSuggestions = [];
+                let selectedIndex = 0;
+                
+                editor.addEventListener('input', function(e) {
+                    const cursorPos = editor.selectionStart;
+                    const textBeforeCursor = editor.value.substring(0, cursorPos);
+                    const currentLine = textBeforeCursor.split('\n').pop();
+                    const currentWord = currentLine.split(/\s+/).pop();
+                    
+                    // শেষের অক্ষর চেক করুন
+                    const lastChar = currentWord.charAt(currentWord.length - 1);
+                    
+                    // সাজেশন খুঁজুন
+                    currentSuggestions = autoCompleteData[lastChar] || [];
+                    
+                    if (currentSuggestions.length > 0) {
+                        showSuggestions(suggestionsElement, currentSuggestions, editor);
+                        selectedIndex = 0;
+                        updateSuggestionSelection();
+                    } else {
+                        hideSuggestions(suggestionsElement);
+                    }
+                });
+                
+                editor.addEventListener('keydown', function(e) {
+                    if (suggestionsElement.style.display === 'block') {
+                        if (e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            selectedIndex = (selectedIndex + 1) % currentSuggestions.length;
+                            updateSuggestionSelection();
+                        } else if (e.key === 'ArrowUp') {
+                            e.preventDefault();
+                            selectedIndex = (selectedIndex - 1 + currentSuggestions.length) % currentSuggestions.length;
+                            updateSuggestionSelection();
+                        } else if (e.key === 'Enter' || e.key === 'Tab') {
+                            e.preventDefault();
+                            applySuggestion(editor, currentSuggestions[selectedIndex].value);
+                            hideSuggestions(suggestionsElement);
+                        } else if (e.key === 'Escape') {
+                            hideSuggestions(suggestionsElement);
+                        }
+                    }
+                });
+                
+                function showSuggestions(suggestionsElement, suggestions, editor) {
+                    suggestionsElement.innerHTML = '';
+                    suggestions.forEach((suggestion, index) => {
+                        const item = document.createElement('div');
+                        item.className = 'suggestion-item';
+                        item.textContent = suggestion.display;
+                        item.dataset.index = index;
+                        item.addEventListener('click', function() {
+                            applySuggestion(editor, suggestion.value);
+                            hideSuggestions(suggestionsElement);
+                        });
+                        suggestionsElement.appendChild(item);
+                    });
+                    
+                    // পজিশন সেট করুন
+                    const rect = editor.getBoundingClientRect();
+                    suggestionsElement.style.top = (rect.top + 30) + 'px';
+                    suggestionsElement.style.left = (rect.left + 50) + 'px';
+                    suggestionsElement.style.display = 'block';
+                }
+                
+                function hideSuggestions(suggestionsElement) {
+                    suggestionsElement.style.display = 'none';
+                }
+                
+                function updateSuggestionSelection() {
+                    const items = suggestionsElement.querySelectorAll('.suggestion-item');
+                    items.forEach((item, index) => {
+                        if (index === selectedIndex) {
+                            item.classList.add('active');
+                        } else {
+                            item.classList.remove('active');
+                        }
+                    });
+                }
+                
+                function applySuggestion(editor, value) {
+                    const cursorPos = editor.selectionStart;
+                    const textBeforeCursor = editor.value.substring(0, cursorPos);
+                    const textAfterCursor = editor.value.substring(cursorPos);
+                    
+                    // শেষের শব্দটি খুঁজে বের করুন
+                    const currentLine = textBeforeCursor.split('\n').pop();
+                    const words = currentLine.split(/\s+/);
+                    const currentWord = words[words.length - 1];
+                    
+                    // নতুন টেক্সট তৈরি করুন
+                    const newTextBefore = textBeforeCursor.substring(0, textBeforeCursor.length - currentWord.length);
+                    const newText = newTextBefore + value + textAfterCursor;
+                    
+                    editor.value = newText;
+                    
+                    // কার্সর পজিশন আপডেট করুন
+                    const newCursorPos = newTextBefore.length + value.length;
+                    editor.setSelectionRange(newCursorPos, newCursorPos);
+                    editor.focus();
+                    
+                    // লাইন নাম্বার আপডেট করুন
+                    updateLineNumbers(htmlEditor, htmlLineNumbers);
+                    updateLineNumbers(cssEditor, cssLineNumbers);
+                    updateLineNumbers(jsEditor, jsLineNumbers);
+                    
+                    // প্রিভিউ আপডেট করুন
+                    updatePreview();
+                }
+            }
+            
+            // ট্যাব ফাংশনালিটি
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // সব ট্যাব নিষ্ক্রিয় করুন
+                    tabs.forEach(t => t.classList.remove('active'));
+                    
+                    // বর্তমান ট্যাব সক্রিয় করুন
+                    this.classList.add('active');
+                    
+                    // কন্টেন্ট শো/হাইড করুন
+                    if (tabId === 'result') {
+                        penContainer.classList.add('result-only');
+                    } else {
+                        penContainer.classList.remove('result-only');
+                        
+                        // নির্দিষ্ট এডিটর শো করুন
+                        const editors = document.querySelectorAll('.code-editor');
+                        editors.forEach(editor => {
+                            editor.style.display = 'none';
+                        });
+                        
+                        if (tabId === 'html') {
+                            document.querySelector('.code-editor:nth-child(1)').style.display = 'flex';
+                        } else if (tabId === 'css') {
+                            document.querySelector('.code-editor:nth-child(2)').style.display = 'flex';
+                        } else if (tabId === 'js') {
+                            document.querySelector('.code-editor:nth-child(3)').style.display = 'flex';
+                        }
+                    }
+                });
+            });
+            
+            // ইভেন্ট লিসেনার
+            [htmlEditor, cssEditor, jsEditor].forEach(editor => {
+                editor.addEventListener('input', function() {
+                    updateLineNumbers(htmlEditor, htmlLineNumbers);
+                    updateLineNumbers(cssEditor, cssLineNumbers);
+                    updateLineNumbers(jsEditor, jsLineNumbers);
+                    updatePreview();
+                });
+                
+                editor.addEventListener('scroll', function() {
+                    const lineNumbers = this.id === 'html-editor' ? htmlLineNumbers : 
+                                      this.id === 'css-editor' ? cssLineNumbers : jsLineNumbers;
+                    lineNumbers.scrollTop = this.scrollTop;
+                });
+            });
+            
+            refreshBtn.addEventListener('click', updatePreview);
+            
+            // অটো-কমপ্লিশন সেটআপ
+            setupAutoComplete(htmlEditor, htmlSuggestions, htmlAutoComplete);
+            setupAutoComplete(cssEditor, cssSuggestions, cssAutoComplete);
+            setupAutoComplete(jsEditor, jsSuggestions, jsAutoComplete);
+            
+            // প্রাথমিক সেটআপ
+            updateLineNumbers(htmlEditor, htmlLineNumbers);
+            updateLineNumbers(cssEditor, cssLineNumbers);
+            updateLineNumbers(jsEditor, jsLineNumbers);
+            updatePreview();
+        });
+    </script>
+</body>
+</html>
