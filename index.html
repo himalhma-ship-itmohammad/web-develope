@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodePen Clone</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+        }
+        
+        .pen-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #1e1e1e;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .pen-header {
+            background: #2c2c2c;
+            padding: 15px 20px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .pen-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .pen-title h1 {
+            font-size: 18px;
+            font-weight: normal;
+            color: #ccc;
+        }
+        
+        .pen-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            background: #444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .action-btn:hover {
+            background: #555;
+        }
+        
+        .action-btn.primary {
+            background: #0ebeff;
+        }
+        
+        .action-btn.primary:hover {
+            background: #0099cc;
+        }
+        
+        .editor-tabs {
+            display: flex;
+            background: #2c2c2c;
+            border-bottom: 1px solid #444;
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: #ccc;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            color: white;
+            border-bottom: 2px solid #0ebeff;
+        }
+        
+        .editor-container {
+            display: flex;
+            height: 400px;
+        }
+        
+        .code-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #444;
+        }
+        
+        .editor-header {
+            background: #2c2c2c;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #444;
+        }
+        
+        .editor-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        .editor-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .editor-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+        }
+        
+        .line-numbers {
+            background: #1e1e1e;
+            color: #6e7681;
+            padding: 15px 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            text-align: right;
+            border-right: 1px solid #444;
+            overflow-y: auto;
+            min-width: 50px;
+            user-select: none;
+        }
+        
+        .code-area {
+            flex: 1;
+            position: relative;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 100%;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border: none;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+        }
+        
+        .preview-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .preview-header {
+            background: #2c2c2c;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #444;
+        }
+        
+        .preview-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        .preview-content {
+            flex: 1;
+            background: white;
+            color: black;
+            overflow: auto;
+            padding: 20px;
+        }
+        
+        .result-only .editor-container {
+            display: none;
+        }
+        
+        .result-only .preview-container {
+            height: 500px;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: #47cf73;
+            color: white;
+            border-radius: 4px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #2c2c2c;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            z-index: 1000;
+            min-width: 300px;
+        }
+        
+        .modal h3 {
+            margin-bottom: 15px;
+            color: white;
+        }
+        
+        .modal-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            background: #444;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: white;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 999;
+        }
+        
+        .projects-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+        
+        .project-item {
+            padding: 10px;
+            border-bottom: 1px solid #444;
+            cursor: pointer;
+        }
+        
+        .project-item:hover {
+            background: #444;
+        }
+    </style>
+</head>
+<body>
+    <div class="pen-container">
+        <div class="pen-header">
+            <div class="pen-title">
+                <h1 id="project-title">My Project</h1>
+            </div>
+            <div class="pen-actions">
+                <button class="action-btn" id="save-btn">Save</button>
+                <button class="action-btn" id="load-btn">Load</button>
+                <button class="action-btn" id="new-btn">New</button>
+                <button class="action-btn" id="export-btn">Export</button>
+                <button class="action-btn primary" id="run-btn">Run</button>
+            </div>
+        </div>
+        
+        <div class="editor-tabs">
+            <div class="tab active" data-tab="html">HTML</div>
+            <div class="tab" data-tab="css">CSS</div>
+            <div class="tab" data-tab="js">JS</div>
+            <div class="tab" data-tab="result">Result</div>
+        </div>
+        
+        <div class="editor-container">
+            <div class="code-editor">
+                <div class="editor-header">
+                    <div class="editor-title">
+                        <span>HTML</span>
+                    </div>
+                </div>
+                <div class="editor-content">
+                    <div class="editor-wrapper">
+                        <div class="line-numbers" id="html-line-numbers">1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13</div>
+                        <div class="code-area">
+                            <textarea id="html-editor" placeholder="আপনার html কোডটা এখানে লিখুন। ">
+</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="code-editor">
+                <div class="editor-header">
+                    <div class="editor-title">
+                        <span>CSS</span>
+                    </div>
+                </div>
+                <div class="editor-content">
+                    <div class="editor-wrapper">
+                        <div class="line-numbers" id="css-line-numbers">1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10<br>11<br>12<br>13<br>14<br>15<br>16<br>17<br>18<br>19<br>20</div>
+                        <div class="code-area">
+                            <textarea id="css-editor" placeholder="আপনার css কোডটা এখানে লিখুন। ">
+</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="code-editor">
+                <div class="editor-header">
+                    <div class="editor-title">
+                        <span>JS</span>
+                    </div>
+                </div>
+                <div class="editor-content">
+                    <div class="editor-wrapper">
+                        <div class="line-numbers" id="js-line-numbers">1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9<br>10</div>
+                        <div class="code-area">
+                            <textarea id="js-editor" placeholder="আপনার JavaScript কোডটা এখানে লিখুন। ">
+</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="preview-container">
+            <div class="preview-header">
+                <div class="preview-title">
+                    <span>Result</span>
+                </div>
+            </div>
+            <div class="preview-content" id="preview">
+                <!-- Preview will show here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Modal -->
+    <div class="overlay" id="overlay"></div>
+    <div class="modal" id="save-modal">
+        <h3>Save Project</h3>
+        <input type="text" class="modal-input" id="project-name" placeholder="Project name" value="My Project">
+        <div class="modal-buttons">
+            <button class="action-btn" id="cancel-save">Cancel</button>
+            <button class="action-btn primary" id="confirm-save">Save</button>
+        </div>
+    </div>
+
+    <!-- Load Modal -->
+    <div class="modal" id="load-modal">
+        <h3>Load Project</h3>
+        <div class="projects-list" id="projects-list">
+            <!-- Saved projects will appear here -->
+        </div>
+        <div class="modal-buttons">
+            <button class="action-btn" id="cancel-load">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Simple and working code
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get elements
+            const htmlEditor = document.getElementById('html-editor');
+            const cssEditor = document.getElementById('css-editor');
+            const jsEditor = document.getElementById('js-editor');
+            const preview = document.getElementById('preview');
+            
+            const saveBtn = document.getElementById('save-btn');
+            const loadBtn = document.getElementById('load-btn');
+            const newBtn = document.getElementById('new-btn');
+            const exportBtn = document.getElementById('export-btn');
+            const runBtn = document.getElementById('run-btn');
+            
+            const saveModal = document.getElementById('save-modal');
+            const loadModal = document.getElementById('load-modal');
+            const overlay = document.getElementById('overlay');
+            const notification = document.getElementById('notification');
+            
+            const projectNameInput = document.getElementById('project-name');
+            const projectsList = document.getElementById('projects-list');
+            const projectTitle = document.getElementById('project-title');
+            
+            // Update preview function
+            function updatePreview() {
+                const html = htmlEditor.value;
+                const css = '<style>' + cssEditor.value + '</style>';
+                const js = '<script>' + jsEditor.value + '<\/script>';
+                
+                preview.innerHTML = html + css + js;
+            }
+            
+            // Show notification
+            function showNotification(message) {
+                notification.textContent = message;
+                notification.classList.add('show');
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+            
+            // Save project
+            function saveProject() {
+                const projectName = projectNameInput.value || 'Untitled';
+                const projectData = {
+                    html: htmlEditor.value,
+                    css: cssEditor.value,
+                    js: jsEditor.value,
+                    name: projectName,
+                    date: new Date().toLocaleString()
+                };
+                
+                localStorage.setItem('project_' + projectName, JSON.stringify(projectData));
+                projectTitle.textContent = projectName;
+                showNotification('Project saved successfully!');
+                hideSaveModal();
+            }
+            
+            // Load project
+            function loadProject(projectName) {
+                const saved = localStorage.getItem('project_' + projectName);
+                if (saved) {
+                    const projectData = JSON.parse(saved);
+                    htmlEditor.value = projectData.html;
+                    cssEditor.value = projectData.css;
+                    jsEditor.value = projectData.js;
+                    projectTitle.textContent = projectData.name;
+                    updatePreview();
+                    showNotification('Project loaded successfully!');
+                    hideLoadModal();
+                }
+            }
+            
+            // New project
+            function newProject() {
+                if (confirm('Start new project? Current work will be lost.')) {
+                    htmlEditor.value = '<!DOCTYPE html>\n<html>\n<head>\n    <title>New Project</title>\n</head>\n<body>\n    <h1>Hello World!</h1>\n</body>\n</html>';
+                    cssEditor.value = 'body {\n    font-family: Arial, sans-serif;\n    margin: 20px;\n}';
+                    jsEditor.value = '// Your JavaScript code here';
+                    projectTitle.textContent = 'New Project';
+                    updatePreview();
+                    showNotification('New project created!');
+                }
+            }
+            
+            // Export project
+            function exportProject() {
+                const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+    <style>${cssEditor.value}</style>
+</head>
+<body>
+    ${htmlEditor.value}
+    <script>${jsEditor.value}<\/script>
+</body>
+</html>`;
+                
+                const blob = new Blob([htmlContent], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = (projectTitle.textContent || 'project') + '.html';
+                a.click();
+                URL.revokeObjectURL(url);
+                showNotification('Project exported!');
+            }
+            
+            // Show/hide modals
+            function showSaveModal() {
+                saveModal.style.display = 'block';
+                overlay.style.display = 'block';
+                projectNameInput.value = projectTitle.textContent;
+            }
+            
+            function hideSaveModal() {
+                saveModal.style.display = 'none';
+                overlay.style.display = 'none';
+            }
+            
+            function showLoadModal() {
+                loadModal.style.display = 'block';
+                overlay.style.display = 'block';
+                loadProjectsList();
+            }
+            
+            function hideLoadModal() {
+                loadModal.style.display = 'none';
+                overlay.style.display = 'none';
+            }
+            
+            function loadProjectsList() {
+                projectsList.innerHTML = '';
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('project_')) {
+                        const projectData = JSON.parse(localStorage.getItem(key));
+                        const projectItem = document.createElement('div');
+                        projectItem.className = 'project-item';
+                        projectItem.innerHTML = `
+                            <strong>${projectData.name}</strong>
+                            <br><small>${projectData.date}</small>
+                        `;
+                        projectItem.onclick = () => loadProject(projectData.name);
+                        projectsList.appendChild(projectItem);
+                    }
+                }
+                
+                if (projectsList.children.length === 0) {
+                    projectsList.innerHTML = '<div class="project-item">No saved projects</div>';
+                }
+            }
+            
+            // Tab functionality
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    
+                    // Update tabs
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Show/hide editors
+                    const editors = document.querySelectorAll('.code-editor');
+                    if (tabName === 'result') {
+                        editors.forEach(editor => editor.style.display = 'none');
+                        document.querySelector('.preview-container').style.flex = '1';
+                    } else {
+                        editors.forEach(editor => editor.style.display = 'flex');
+                        document.querySelector('.preview-container').style.flex = '1';
+                        
+                        // Show specific editor
+                        editors.forEach(editor => editor.style.display = 'none');
+                        if (tabName === 'html') {
+                            editors[0].style.display = 'flex';
+                        } else if (tabName === 'css') {
+                            editors[1].style.display = 'flex';
+                        } else if (tabName === 'js') {
+                            editors[2].style.display = 'flex';
+                        }
+                    }
+                });
+            });
+            
+            // লাইন নাম্বার আপডেট ফাংশন
+function updateLineNumbers(editor, lineNumbersElement) {
+    const lines = editor.value.split('\n');
+    let numbersHTML = '';
+    
+    for (let i = 1; i <= lines.length; i++) {
+        numbersHTML += i + '<br>';
+    }
+    
+    lineNumbersElement.innerHTML = numbersHTML;
+}
+
+// ইভেন্ট লিসেনার - এই অংশটি যোগ করুন
+[htmlEditor, cssEditor, jsEditor].forEach(editor => {
+    editor.addEventListener('input', function() {
+        updateLineNumbers(htmlEditor, document.getElementById('html-line-numbers'));
+        updateLineNumbers(cssEditor, document.getElementById('css-line-numbers'));
+        updateLineNumbers(jsEditor, document.getElementById('js-line-numbers'));
+        updatePreview();
+    });
+    
+    editor.addEventListener('scroll', function() {
+        const lineNumbers = this.id === 'html-editor' ? document.getElementById('html-line-numbers') : 
+                          this.id === 'css-editor' ? document.getElementById('css-line-numbers') : 
+                          document.getElementById('js-line-numbers');
+        lineNumbers.scrollTop = this.scrollTop;
+    });
+});
+
+// প্রাথমিক সেটআপ - এই লাইনগুলো যোগ করুন
+updateLineNumbers(htmlEditor, document.getElementById('html-line-numbers'));
+updateLineNumbers(cssEditor, document.getElementById('css-line-numbers'));
+updateLineNumbers(jsEditor, document.getElementById('js-line-numbers'));
+            
+            // Event listeners
+            runBtn.addEventListener('click', updatePreview);
+            saveBtn.addEventListener('click', showSaveModal);
+            loadBtn.addEventListener('click', showLoadModal);
+            newBtn.addEventListener('click', newProject);
+            exportBtn.addEventListener('click', exportProject);
+            
+            document.getElementById('confirm-save').addEventListener('click', saveProject);
+            document.getElementById('cancel-save').addEventListener('click', hideSaveModal);
+            document.getElementById('cancel-load').addEventListener('click', hideLoadModal);
+            overlay.addEventListener('click', function() {
+                hideSaveModal();
+                hideLoadModal();
+            });
+            
+            // Auto-update preview when typing
+            [htmlEditor, cssEditor, jsEditor].forEach(editor => {
+                editor.addEventListener('input', updatePreview);
+            });
+            
+            // Initial preview
+            updatePreview();
+        });
+    </script>
+</body>
+</html>
